@@ -27,7 +27,7 @@ export default function ReviewScreen() {
     
     // Her şeyi temizle ve ana uygulamaya (tabs) dön
     clearPhotos();
-    router.replace('/(tabs)/'); // veya bir "Tamamlandı" ekranına
+    router.replace(`/completion?patientName=${answers.name || 'Misafir'}`); // veya bir "Tamamlandı" ekranına
   };
 
   // Web kodunuzdaki 'handleRetake' (Tek bir fotoğrafı yeniden çek)

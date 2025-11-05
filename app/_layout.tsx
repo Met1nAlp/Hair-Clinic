@@ -36,6 +36,11 @@ export default function RootLayout() {
         name="(photo-capture)" 
         options={{ headerShown: false }} 
       />
+
+      <Stack.Screen 
+        name="completion" 
+        options={{ headerShown: false }} // Başlığı olmayan tam ekran
+      />
       
       <Stack.Screen 
         name="(tabs)" 

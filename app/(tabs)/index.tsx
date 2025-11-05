@@ -1,98 +1,381 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+// Dosya: app/(tabs)/index.tsx
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import {
+  AlertCircle,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  FileText,
+  Phone,
+  Video,
+} from 'lucide-react-native';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { COLORS, FONTS, SIZES } from '../../constants/theme';
+import { useSurveyStore } from '../../store/surveyStore';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+// Web kodunuzdaki 'Quick Action' kartları için
+const QuickActionCard: React.FC<{
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  onPress: () => void;
+}> = ({ title, subtitle, icon, onPress }) => (
+  <TouchableOpacity style={styles.quickCard} onPress={onPress}>
+    <View style={styles.quickIconContainer}>{icon}</View>
+    <View style={styles.quickTextContainer}>
+      <Text style={styles.quickTitle}>{title}</Text>
+      <Text style={styles.quickSubtitle}>{subtitle}</Text>
+    </View>
+  </TouchableOpacity>
+);
 
-export default function HomeScreen() {
+// Web kodunuzdaki 'Checklist Item' için
+type ChecklistItemProps = {
+  status: 'completed' | 'pending' | 'todo';
+  title: string;
+  subtitle: string;
+};
+const ChecklistItem: React.FC<ChecklistItemProps> = ({ status, title, subtitle }) => {
+  const getIcon = () => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle2 size={20} color="#28A745" />;
+      case 'pending':
+        return <Clock size={20} color={COLORS.primary} />;
+      default:
+        return <View style={styles.todoIcon} />;
+    }
+  };
+  const getContainerStyle = () => {
+    switch (status) {
+      case 'completed':
+        return { backgroundColor: '#E7F7E9' };
+      case 'pending':
+        return { backgroundColor: COLORS.infoBackground, borderColor: '#BEDAFF', borderWidth: 1 };
+      default:
+        return { backgroundColor: COLORS.stepCardBackground };
+    }
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <View style={[styles.checklistItem, getContainerStyle()]}>
+      <View style={{ marginRight: SIZES.base }}>{getIcon()}</View>
+      <View>
+        <Text style={styles.checklistTitle}>{title}</Text>
+        <Text style={styles.checklistSubtitle}>{subtitle}</Text>
+      </View>
+    </View>
+  );
+};
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+export default function DashboardScreen() {
+  const router = useRouter();
+  // Hastanın adını anket store'undan al
+  const patientName = useSurveyStore((state) => state.answers.name) || 'Misafir';
+
+  // Ekran görüntüsü ve web kodunuzdaki simüle edilmiş veriler
+  const daysUntilOperation = 3;
+  // Simüle edilmiş tarih (Ekran görüntüsündeki gibi)
+  // Bu kodu dinamik tarihle güncelleyebiliriz
+  const operationDateStr = '8 Kasım 2025 Cumartesi'; 
+
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.content}>
+        {/* Başlık */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Merhaba, {patientName}</Text>
+          <Text style={styles.subtitle}>Smile Hair Clinic dijital yolculuğunuza hoş geldiniz</Text>
+        </View>
+
+        {/* Ana Eylem Kartı (Mavi Gradient) */}
+        <LinearGradient
+          colors={['#0D69FF', '#0052CC']}
+          style={styles.primaryCard}
+        >
+          <View style={styles.primaryCardHeader}>
+            <View style={styles.primaryIconContainer}>
+              <Calendar size={24} color={COLORS.white} />
+            </View>
+            <View>
+              <View style={styles.badge}><Text style={styles.badgeText}>Yaklaşan</Text></View>
+              <Text style={styles.primaryTitle}>Operasyonunuza {daysUntilOperation} Gün Kaldı</Text>
+              <Text style={styles.primarySubtitle}>{operationDateStr}</Text>
+            </View>
+          </View>
+          <TouchableOpacity style={styles.primaryButton}>
+            <FileText size={16} color={COLORS.primary} />
+            <Text style={styles.primaryButtonText}>Operasyon Öncesi Kontrol Listesini Gözden Geçirin</Text>
+          </TouchableOpacity>
+        </LinearGradient>
+
+        {/* Hızlı Eylemler (3'lü Grid) */}
+        <View style={styles.quickActionsContainer}>
+          <QuickActionCard
+            icon={<CheckCircle2 size={20} color="#28A745" />}
+            title="Analiz Tamamlandı"
+            subtitle="Raporunuzu görüntüleyin"
+            onPress={() => {}}
+          />
+          <QuickActionCard
+            icon={<Video size={20} color={COLORS.primary} />}
+            title="Hazırlık Videoları"
+            subtitle="Bilgilendirme"
+            onPress={() => {}}
+          />
+          <QuickActionCard
+            icon={<Phone size={20} color="#6F42C1" />}
+            title="Koordinatör İletişim"
+            subtitle="Bize ulaşın"
+            onPress={() => {}}
+          />
+        </View>
+
+        {/* Kontrol Listesi */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>Operasyon Öncesi Kontrol Listesi</Text>
+            <View style={styles.checklistBadge}>
+              <Text style={styles.checklistBadgeText}>5/8 Tamamlandı</Text>
+            </View>
+          </View>
+          <ChecklistItem
+            status="completed"
+            title="Online konsültasyon tamamlandı"
+            subtitle="2 gün önce"
+          />
+          <ChecklistItem
+            status="completed"
+            title="Kan tahlilleri yüklendi"
+            subtitle="1 gün önce"
+          />
+          <ChecklistItem
+            status="completed"
+            title="Ulaşım detayları onaylandı"
+            subtitle="1 gün önce"
+          />
+          <ChecklistItem
+            status="pending"
+            title="Operasyon öncesi 24 saat video izle"
+            subtitle="Yakında"
+          />
+          <ChecklistItem
+            status="todo"
+            title="Operasyon günü alkol/kafein almayın"
+            subtitle="Operasyon günü"
+          />
+          <ChecklistItem
+            status="todo"
+            title="Rahat kıyafetler giyin"
+            subtitle="Operasyon günü"
+          />
+        </View>
+
+        {/* Önemli Hatırlatmalar */}
+        <View style={styles.reminderCard}>
+          <AlertCircle size={24} color="#FFA000" style={{ marginRight: SIZES.base }} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.reminderTitle}>Önemli Hatırlatmalar</Text>
+            <Text style={styles.reminderText}>• Operasyondan 1 hafta önce aspirin ve kan sulandırıcı ilaçları bırakın</Text>
+            <Text style={styles.reminderText}>• Operasyondan 3 gün önce alkol tüketimini durdurun</Text>
+            <Text style={styles.reminderText}>• Operasyon günü rahat, önden düğmeli kıyafetler tercih edin</Text>
+          </View>
+        </View>
+
+      </View>
+    </ScrollView>
   );
 }
 
+// Stiller (Web kodunuza ve ekran görüntünüze göre)
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F9FA', // Arka plan
+  },
+  content: {
+    padding: SIZES.padding,
+  },
+  header: {
+    marginBottom: SIZES.padding,
+  },
+  title: {
+    ...FONTS.h1,
+    color: COLORS.textPrimary,
+  },
+  subtitle: {
+    ...FONTS.body2,
+    color: COLORS.textSecondary,
+    marginTop: SIZES.base / 2,
+  },
+  primaryCard: {
+    borderRadius: SIZES.radius * 2,
+    padding: SIZES.padding,
+    marginBottom: SIZES.padding,
+  },
+  primaryCardHeader: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: SIZES.padding,
+  },
+  primaryIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
+    marginRight: SIZES.base * 2,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  badge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: SIZES.base,
+    paddingVertical: SIZES.base / 2,
+    borderRadius: SIZES.radius,
+    alignSelf: 'flex-start',
+    marginBottom: SIZES.base,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  badgeText: {
+    ...FONTS.body3,
+    fontSize: 12,
+    color: COLORS.white,
+    fontWeight: '600',
+  },
+  primaryTitle: {
+    ...FONTS.h2,
+    color: COLORS.white,
+  },
+  primarySubtitle: {
+    ...FONTS.body2,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: SIZES.base / 2,
+  },
+  primaryButton: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.white,
+    borderRadius: SIZES.radius,
+    padding: SIZES.base * 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  primaryButtonText: {
+    ...FONTS.h2,
+    fontSize: 16,
+    color: COLORS.primary,
+    marginLeft: SIZES.base,
+  },
+  quickActionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: SIZES.padding,
+  },
+  quickCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: SIZES.radius,
+    padding: SIZES.base * 1.5,
+    width: '32%', // 3'lü grid
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  quickIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: SIZES.radius,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.infoBackground, // Varsayılan (diğerlerini ekleyebiliriz)
+    marginBottom: SIZES.base * 1.5,
+  },
+  quickTitle: {
+    ...FONTS.h2,
+    fontSize: 14,
+    color: COLORS.textPrimary,
+  },
+  quickSubtitle: {
+    ...FONTS.body3,
+    color: COLORS.textSecondary,
+    marginTop: SIZES.base / 2,
+  },
+  quickTextContainer: {
+    minHeight: 50, // Kart yüksekliklerini eşitler
+  },
+  card: {
+    backgroundColor: COLORS.white,
+    borderRadius: SIZES.radius * 2,
+    padding: SIZES.padding,
+    marginBottom: SIZES.padding,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SIZES.padding,
+  },
+  cardTitle: {
+    ...FONTS.h2,
+    color: COLORS.textPrimary,
+  },
+  checklistBadge: {
+    backgroundColor: COLORS.infoBackground,
+    borderColor: '#BEDAFF',
+    borderWidth: 1,
+    paddingHorizontal: SIZES.base,
+    paddingVertical: SIZES.base / 2,
+    borderRadius: SIZES.radius,
+  },
+  checklistBadgeText: {
+    ...FONTS.body3,
+    fontSize: 12,
+    color: COLORS.primary,
+    fontWeight: '600',
+  },
+  checklistItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: SIZES.base * 1.5,
+    borderRadius: SIZES.radius,
+    marginBottom: SIZES.base,
+  },
+  checklistTitle: {
+    ...FONTS.body2,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+  },
+  checklistSubtitle: {
+    ...FONTS.body3,
+    color: COLORS.textSecondary,
+    marginTop: 4,
+  },
+  todoIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: COLORS.iconInactive,
+  },
+  reminderCard: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFBEA',
+    borderRadius: SIZES.radius * 2,
+    padding: SIZES.padding,
+    borderWidth: 1,
+    borderColor: '#FFEEBA',
+  },
+  reminderTitle: {
+    ...FONTS.h2,
+    fontSize: 16,
+    color: COLORS.textPrimary,
+    marginBottom: SIZES.base,
+  },
+  reminderText: {
+    ...FONTS.body3,
+    color: '#856404',
+    lineHeight: 18,
+    marginBottom: SIZES.base / 2,
   },
 });
