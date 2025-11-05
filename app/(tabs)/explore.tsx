@@ -1,112 +1,295 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import {
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Droplets,
+  FileText,
+  MapPin,
+  TrendingUp,
+  Video,
+} from 'lucide-react-native';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { JOURNEY_STEPS, JourneyIconName, JourneyStep } from '../../constants/journeyData';
+import { COLORS, FONTS, SIZES } from '../../constants/theme';
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+// İkon adını (string) alıp, ilgili ikonu (React Component) döndüren yardımcı fonksiyon
+const renderIcon = (iconName: JourneyIconName, color: string, size: number) => {
+  switch (iconName) {
+    case 'CheckCircle2': return <CheckCircle2 size={size} color={color} />;
+    case 'Clock': return <Clock size={size} color={color} />;
+    case 'MapPin': return <MapPin size={size} color={color} />;
+    case 'Droplets': return <Droplets size={size} color={color} />;
+    case 'Calendar': return <Calendar size={size} color={color} />;
+    case 'TrendingUp': return <TrendingUp size={size} color={color} />;
+    case 'FileText': return <FileText size={size} color={color} />;
+    case 'Video': return <Video size={size} color={color} />;
+    default: return <CheckCircle2 size={size} color={color} />;
+  }
+};
 
-export default function TabTwoScreen() {
+const JourneyStepCard: React.FC<{ step: JourneyStep }> = ({ step }) => {
+  const isCompleted = step.status === 'completed';
+  const isCurrent = step.status === 'current';
+
+  // Duruma göre stil belirle
+  const cardStyle = [
+    styles.card,
+    isCompleted && styles.cardCompleted,
+    isCurrent && styles.cardCurrent,
+  ];
+  const iconDotStyle = [
+    styles.iconDot,
+    isCompleted && styles.iconDotCompleted,
+    isCurrent && styles.iconDotCurrent,
+    !isCompleted && !isCurrent && styles.iconDotUpcoming,
+  ];
+  const iconColor = (isCompleted || isCurrent) ? COLORS.white : COLORS.iconInactive;
+  const bulletColor = isCompleted ? '#28A745' : (isCurrent ? COLORS.primary : COLORS.iconInactive);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <View style={styles.stepContainer}>
+      {/* 1. İkon Çemberi (Sol taraf) */}
+      <View style={iconDotStyle}>
+        {renderIcon(step.icon, iconColor, 32)}
+      </View>
+
+      {/* 2. İçerik Kartı (Sağ taraf) */}
+      <View style={cardStyle}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>{step.title}</Text>
+          {isCompleted && <View style={styles.badgeCompleted}><Text style={styles.badgeText}>Tamamlandı</Text></View>}
+          {isCurrent && <View style={styles.badgeCurrent}><Text style={styles.badgeText}>Aktif</Text></View>}
+        </View>
+        <Text style={styles.cardDescription}>{step.description}</Text>
+        {step.date && <Text style={styles.cardDate}>{step.date}</Text>}
+
+        <View style={styles.detailsContainer}>
+          {step.details.map((detail, idx) => (
+            <View key={idx} style={styles.detailItem}>
+              <View style={[styles.bullet, { backgroundColor: bulletColor }]} />
+              <Text style={styles.detailText}>{detail}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Web kodunuzdaki koşullu butonlar */}
+        {isCurrent && (
+          <TouchableOpacity style={[styles.button, styles.buttonCurrent]}>
+            <FileText size={16} color={COLORS.white} />
+            <Text style={styles.buttonText}>Detaylı Talimatları Görüntüle</Text>
+          </TouchableOpacity>
+        )}
+        {step.id === 'first-wash' && step.status !== 'completed' && (
+          <TouchableOpacity style={[styles.button, styles.buttonOutline]}>
+            <Video size={16} color={COLORS.primary} />
+            <Text style={[styles.buttonText, { color: COLORS.primary }]}>Yıkama Videosunu İzle</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+  );
+};
+
+export default function JourneyScreen() {
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.content}>
+        <Text style={styles.title}>Yolculuğum</Text>
+        <Text style={styles.subtitle}>Saç ekimi sürecinizin tüm aşamaları</Text>
+
+        {/* Zaman Tüneli Konteyneri */}
+        <View style={styles.timelineContainer}>
+          {/* Dikey Çizgi */}
+          <LinearGradient
+            colors={['#28A745', '#0D69FF', '#E9ECEF']}
+            style={styles.timelineLine}
+          />
+          {/* Adımlar */}
+          {JOURNEY_STEPS.map((step) => (
+            <JourneyStepCard key={step.id} step={step} />
+          ))}
+        </View>
+
+        {/* Destek Kartı */}
+        <View style={styles.supportCard}>
+          <Text style={styles.supportTitle}>Sorularınız mı var?</Text>
+          <Text style={styles.supportText}>Süreç boyunca hasta koordinatörünüz size rehberlik edecektir</Text>
+          <TouchableOpacity style={[styles.button, styles.buttonCurrent, { width: '100%' }]}>
+            <Text style={styles.buttonText}>Koordinatörle İletişime Geç</Text>
+          </TouchableOpacity>
+        </View>
+
+      </View>
+    </ScrollView>
   );
 }
 
+// Stiller (Web kodunuza ve ekran görüntünüze göre)
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
   },
-  titleContainer: {
+  content: {
+    padding: SIZES.padding,
+  },
+  title: {
+    ...FONTS.h1,
+    color: COLORS.textPrimary,
+  },
+  subtitle: {
+    ...FONTS.body2,
+    color: COLORS.textSecondary,
+    marginBottom: SIZES.padding,
+  },
+  timelineContainer: {
+    position: 'relative', // Bu, çizginin 'absolute' pozisyon alması için gereklidir
+  },
+  timelineLine: {
+    position: 'absolute',
+    left: 32 - 2, // 64 (çember genişliği) / 2 - 2 (çizgi genişliği) / 2
+    top: 64,  // İlk çemberin altında başla
+    bottom: 64, // Son çemberin üstünde bitir
+    width: 4,
+  },
+  stepContainer: {
     flexDirection: 'row',
-    gap: 8,
+    marginBottom: SIZES.base * 2,
+    alignItems: 'flex-start',
+  },
+  iconDot: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    // 'absolute' yerine akış içinde tutuyoruz, 'marginLeft' ile dengeliyoruz
+    marginRight: SIZES.base * 2, // = ml-16
+    zIndex: 1, // Çizginin üstünde
+  },
+  iconDotCompleted: { backgroundColor: '#28A745' },
+  iconDotCurrent: { backgroundColor: COLORS.primary, borderWidth: 4, borderColor: COLORS.infoBackground },
+  iconDotUpcoming: { backgroundColor: COLORS.stepCardBackground, borderWidth: 2, borderColor: COLORS.iconInactive },
+
+  card: {
+    flex: 1,
+    backgroundColor: COLORS.white,
+    borderRadius: SIZES.radius,
+    padding: SIZES.padding,
+    borderWidth: 1,
+    borderColor: COLORS.iconInactive,
+    marginTop: SIZES.padding / 2, // İkonun ortalanması için
+  },
+  cardCompleted: {
+    backgroundColor: '#E7F7E9', // Açık yeşil
+    borderColor: '#AEE9B7',
+  },
+  cardCurrent: {
+    borderColor: COLORS.primary,
+    borderWidth: 2,
+    backgroundColor: COLORS.white,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SIZES.base * 2,
+  },
+  cardTitle: {
+    ...FONTS.h2,
+    fontSize: 18,
+    color: COLORS.textPrimary,
+    marginRight: SIZES.base,
+  },
+  badgeCompleted: {
+    backgroundColor: '#D5F5E3',
+    paddingHorizontal: SIZES.base,
+    paddingVertical: SIZES.base / 2,
+    borderRadius: SIZES.radius,
+  },
+  badgeCurrent: {
+    backgroundColor: COLORS.infoBackground,
+    paddingHorizontal: SIZES.base,
+    paddingVertical: SIZES.base / 2,
+    borderRadius: SIZES.radius,
+  },
+  badgeText: {
+    ...FONTS.body3,
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.primary, // 'Tamamlandı' için de yeşil yapabiliriz
+  },
+  cardDescription: {
+    ...FONTS.body2,
+    color: COLORS.textSecondary,
+    marginBottom: SIZES.base / 2,
+  },
+  cardDate: {
+    ...FONTS.body3,
+    color: COLORS.textSecondary,
+    marginBottom: SIZES.base * 2,
+  },
+  detailsContainer: {
+    borderTopWidth: 1,
+    borderColor: COLORS.iconInactive,
+    paddingTop: SIZES.base * 2,
+  },
+  detailItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: SIZES.base,
+  },
+  bullet: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: SIZES.base,
+    marginTop: 6, // Metin satır yüksekliğine göre ortala
+  },
+  detailText: {
+    ...FONTS.body2,
+    color: COLORS.textPrimary,
+    flex: 1,
+  },
+  button: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SIZES.base * 1.5,
+    borderRadius: SIZES.radius,
+    marginTop: SIZES.base * 2,
+  },
+  buttonCurrent: {
+    backgroundColor: COLORS.primary,
+  },
+  buttonOutline: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  buttonText: {
+    ...FONTS.h2,
+    fontSize: 16,
+    color: COLORS.white,
+    marginLeft: SIZES.base,
+  },
+  supportCard: {
+    backgroundColor: COLORS.infoBackground,
+    borderRadius: SIZES.radius,
+    padding: SIZES.padding,
+    alignItems: 'center',
+    marginTop: SIZES.padding,
+  },
+  supportTitle: {
+    ...FONTS.h2,
+    color: COLORS.textPrimary,
+    marginBottom: SIZES.base,
+  },
+  supportText: {
+    ...FONTS.body2,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginBottom: SIZES.base * 2,
   },
 });
