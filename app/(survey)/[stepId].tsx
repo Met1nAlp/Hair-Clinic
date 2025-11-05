@@ -1,0 +1,294 @@
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SURVEY_DATA, SurveyQuestion } from '../../constants/surveyData';
+import { Colors, FONTS, SIZES } from '../../constants/theme';
+import { MedicalAnswers, useSurveyStore } from '../../store/surveyStore';
+
+
+const QuestionInput: React.FC<{ 
+  question: SurveyQuestion; 
+  onNext: (nextStepId: string, answer: any) => void;
+  isNumber?: boolean;
+}> = ({ question, onNext, isNumber = false }) => {
+  const initialValue = useSurveyStore.getState().answers[question.id as keyof MedicalAnswers];
+  const [value, setValue] = useState(initialValue === undefined ? '' : String(initialValue));
+  const disabled = !value || (isNumber && (parseInt(value) < 18 || parseInt(value) > 80));
+
+  return (
+    <>
+      <Text style={styles.title}>{question.title}</Text>
+      {question.subtitle && <Text style={styles.subtitle}>{question.subtitle}</Text>}
+      <TextInput
+        style={styles.textInput}
+        placeholder={question.placeholder}
+        placeholderTextColor={Colors.textSecondary}
+        value={value}
+        onChangeText={setValue}
+        keyboardType={isNumber ? 'numeric' : 'default'}
+        autoFocus
+      />
+      <TouchableOpacity 
+        style={[styles.button, disabled && styles.buttonDisabled]}
+        onPress={() => onNext(question.nextStepId!, value)}
+        disabled={disabled}
+      >
+        <Text style={styles.buttonText}>Devam Et</Text>
+        <Ionicons name="arrow-forward" size={20} color={Colors.white} />
+      </TouchableOpacity>
+    </>
+  );
+};
+
+const QuestionTextArea: React.FC<{ 
+  question: SurveyQuestion; 
+  onNext: (nextStepId: string, answer: string) => void;
+}> = ({ question, onNext }) => {
+  const initialValue = useSurveyStore.getState().answers[question.id as keyof MedicalAnswers];
+  const [value, setValue] = useState(initialValue === undefined ? '' : String(initialValue));
+  const disabled = !value || value.length < 5;
+
+  return (
+    <>
+      <Text style={styles.title}>{question.title}</Text>
+      {question.subtitle && <Text style={styles.subtitle}>{question.subtitle}</Text>}
+      <TextInput
+        style={[styles.textInput, { height: 120, textAlignVertical: 'top' }]}
+        placeholder={question.placeholder}
+        placeholderTextColor={Colors.textSecondary}
+        value={value}
+        onChangeText={setValue}
+        multiline={true}
+        numberOfLines={4}
+        autoFocus
+      />
+      <TouchableOpacity 
+        style={[styles.button, disabled && styles.buttonDisabled]}
+        onPress={() => onNext(question.nextStepId!, value)}
+        disabled={disabled}
+      >
+        <Text style={styles.buttonText}>Devam Et</Text>
+        <Ionicons name="arrow-forward" size={20} color={Colors.white} />
+      </TouchableOpacity>
+    </>
+  );
+};
+
+const QuestionBoolean: React.FC<{ 
+  question: SurveyQuestion; 
+  onNext: (nextStepId: string, answer: boolean) => void;
+}> = ({ question, onNext }) => {
+  return (
+    <>
+      <Text style={[styles.title, { textAlign: 'center' }]}>{question.title}</Text>
+      {question.subtitle && <Text style={[styles.subtitle, { textAlign: 'center' }]}>{question.subtitle}</Text>}
+      <View style={styles.selectionContainer}>
+        {question.options?.map((option) => (
+          <TouchableOpacity
+            key={option.value.toString()}
+            style={styles.selectionCard}
+            onPress={() => onNext(option.nextStepId, option.value)}
+          >
+            <View style={[styles.boolIconCircle, option.value ? styles.iconYes : styles.iconNo]}>
+              <Text style={styles.boolIconText}>{option.value ? '✅' : '❌'}</Text>
+            </View>
+            <Text style={styles.selectionText}>{option.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </>
+  );
+};
+
+const QuestionRadioGroup: React.FC<{ 
+  question: SurveyQuestion; 
+  onNext: (nextStepId: string, answer: string) => void;
+}> = ({ question, onNext }) => {
+  return (
+    <>
+      <Text style={styles.title}>{question.title}</Text>
+      {question.subtitle && <Text style={styles.subtitle}>{question.subtitle}</Text>}
+      <View style={{ marginTop: SIZES.base }}>
+        {question.options?.map((option) => (
+          <TouchableOpacity
+            key={option.value}
+            style={styles.radioCard}
+            onPress={() => onNext(question.nextStepId!, option.value)}
+          >
+            <View>
+              <Text style={styles.radioTitle}>{option.label}</Text>
+              {option.subtitle && <Text style={styles.radioSubtitle}>{option.subtitle}</Text>}
+            </View>
+            <Ionicons name="chevron-forward" size={24} color={Colors.primary} />
+          </TouchableOpacity>
+        ))}
+      </View>
+    </>
+  );
+};
+
+const QuestionInstructional: React.FC<{ 
+  question: SurveyQuestion; 
+  onNext: (nextStepId: string, answer: string) => void;
+}> = ({ question, onNext }) => {
+  const userName = useSurveyStore((state) => state.answers.name) || '';
+  const finalTitle = question.title.replace('{name}', userName);
+  const preparations = [
+    'İyi ışık alan bir odada çekim yapın',
+    'Düz, tek renkli bir arka plan önünde durun',
+    'Saçlarınız kuru ve düz olsun',
+    'Şapka veya aksesuar kullanmayın',
+  ];
+
+  return (
+    <>
+      <View style={styles.iconHeaderContainer}>
+        <Ionicons name="camera-outline" size={32} color={Colors.primary} />
+      </View>
+      <Text style={[styles.title, { textAlign: 'center' }]}>{finalTitle}</Text>
+      <Text style={[styles.subtitle, { textAlign: 'center', marginBottom: SIZES.padding }]}>
+        {question.subtitle}
+      </Text>
+      <View style={styles.checklistContainer}>
+        <Text style={styles.checklistTitle}>Hazırlık:</Text>
+        {preparations.map((item, index) => (
+          <View key={index} style={styles.checklistItem}>
+            <FontAwesome name="check" size={16} color={Colors.primary} style={{ marginRight: SIZES.base * 1.5 }} />
+            <Text style={styles.checklistText}>{item}</Text>
+          </View>
+        ))}
+      </View>
+      <TouchableOpacity 
+        style={styles.button}
+        onPress={() => onNext(question.nextStepId!, 'photo_prep_confirmed')}
+      >
+        <Text style={styles.buttonText}>Fotoğraf Çekimine Başla</Text>
+        <Ionicons name="arrow-forward" size={20} color={Colors.white} />
+      </TouchableOpacity>
+    </>
+  );
+};
+
+export default function SurveyStepScreen() {
+  const router = useRouter();
+  const { stepId } = useLocalSearchParams<{ stepId: string }>(); 
+  const updateAnswer = useSurveyStore((state) => state.updateAnswer);
+  const currentQuestion = SURVEY_DATA.find(q => q.id === stepId);
+
+  const handleNext = (nextStepId: string, answer: any) => {
+    if (stepId && currentQuestion && currentQuestion.type !== 'instructional') {
+      updateAnswer(stepId as keyof MedicalAnswers, answer);
+    }
+    if (nextStepId.startsWith('/')) {
+      router.replace(nextStepId);
+    } else {
+      router.push(`/(survey)/${nextStepId}`);
+    }
+  };
+
+  if (!currentQuestion) {
+    return <Text>Soru bulunamadı.</Text>;
+  }
+
+  const renderQuestion = () => {
+    switch (currentQuestion.type) {
+      case 'text':
+        return <QuestionInput question={currentQuestion} onNext={handleNext} />;
+      case 'number':
+        return <QuestionInput question={currentQuestion} onNext={handleNext} isNumber />;
+      case 'textarea':
+        return <QuestionTextArea question={currentQuestion} onNext={handleNext} />;
+      case 'boolean':
+        return <QuestionBoolean question={currentQuestion} onNext={handleNext} />;
+      case 'radio-group':
+        return <QuestionRadioGroup question={currentQuestion} onNext={handleNext} />;
+      case 'instructional':
+        return <QuestionInstructional question={currentQuestion} onNext={handleNext} />;
+      default:
+        return <Text>Bilinmeyen soru tipi.</Text>;
+    }
+  };
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+      {renderQuestion()}
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  title: { ...FONTS.h1, fontSize: 22, marginBottom: SIZES.base, color: Colors.textPrimary },
+  subtitle: { ...FONTS.body2, marginBottom: SIZES.padding * 1.5, color: Colors.textSecondary },
+  
+  textInput: {
+    ...FONTS.h2, fontSize: 18,
+    borderWidth: 1,
+    borderColor: Colors.iconInactive,
+    borderRadius: SIZES.radius,
+    padding: SIZES.base * 2,
+    marginBottom: SIZES.padding,
+    backgroundColor: Colors.white,
+    color: Colors.textPrimary,
+  },
+  
+  selectionContainer: { flexDirection: 'row', justifyContent: 'space-around', marginTop: SIZES.padding },
+  selectionCard: {
+    flex: 1, borderWidth: 2, borderColor: '#E9ECEF',
+    borderRadius: SIZES.radius,
+    padding: SIZES.padding,
+    marginHorizontal: SIZES.base,
+    alignItems: 'center',
+    backgroundColor: '#F8F9FA',
+  },
+  boolIconCircle: {
+    width: 64, height: 64, borderRadius: 32,
+    justifyContent: 'center', alignItems: 'center',
+    marginBottom: SIZES.base,
+  },
+  boolIconText: { fontSize: 32 },
+  iconNo: { backgroundColor: '#FADBD8' },
+  iconYes: { backgroundColor: '#D5F5E3' },
+  selectionText: { ...FONTS.h2, fontSize: 16, color: Colors.textPrimary },
+  
+  radioCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: SIZES.base * 2,
+    borderWidth: 2,
+    borderColor: '#E9ECEF',
+    borderRadius: SIZES.radius,
+    backgroundColor: '#F8F9FA',
+    marginBottom: SIZES.base,
+  },
+  radioTitle: { ...FONTS.h2, fontSize: 16, color: Colors.textPrimary },
+  radioSubtitle: { ...FONTS.body3, color: Colors.textSecondary, marginTop: 4 },
+  
+  button: {
+    flexDirection: 'row', width: '100%',
+    backgroundColor: Colors.primary,
+    padding: SIZES.base * 2, borderRadius: SIZES.radius,
+    justifyContent: 'center', alignItems: 'center',
+    marginTop: 'auto', marginBottom: SIZES.base,
+  },
+  buttonDisabled: { backgroundColor: Colors.iconInactive },
+  buttonText: { color: Colors.white, ...FONTS.h2, fontSize: 16, marginRight: SIZES.base },
+  
+  iconHeaderContainer: {
+    width: 64, height: 64, borderRadius: 32,
+    backgroundColor: Colors.infoBackground,
+    justifyContent: 'center', alignItems: 'center',
+    alignSelf: 'center', marginBottom: SIZES.padding,
+  },
+  checklistContainer: {
+    backgroundColor: Colors.stepCardBackground,
+    borderRadius: SIZES.radius,
+    padding: SIZES.padding,
+    marginBottom: SIZES.padding,
+  },
+  checklistTitle: { ...FONTS.h2, fontSize: 16, color: Colors.textPrimary, marginBottom: SIZES.base * 1.5 },
+  checklistItem: { flexDirection: 'row', alignItems: 'center', marginBottom: SIZES.base * 1.5 },
+  checklistText: { ...FONTS.body2, color: Colors.textSecondary, flex: 1, marginLeft: SIZES.base },
+});
