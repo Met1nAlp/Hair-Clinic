@@ -11,28 +11,22 @@ import { useSurveyStore } from '../../store/surveyStore';
 
 export default function ReviewScreen() {
   const router = useRouter();
-  const { photos, clearPhotos } = usePhotoStore();
-  const { answers } = useSurveyStore(); // İleride API'ye göndermek için
+  const { photos, clearPhotos, saveToProgress } = usePhotoStore();
+  const { answers } = useSurveyStore();
   
-  // Tüm fotoğraflar çekildi mi?
   const isComplete = photos.every(p => p !== null);
 
-  // Web kodunuzdaki 'handleSubmit'
   const handleSubmit = () => {
-    // TODO: 'photos' dizisini ve 'answers' (anket cevapları) objesini
-    // buradan API'nize gönderin.
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+    const monthLabel = 'Yeni Kayıt';
     
-    console.log("Anket Cevapları:", answers);
-    console.log("Çekilen Fotoğraflar:", photos.length);
+    saveToProgress(dateStr, monthLabel, 'Fotoğraflar eklendi');
     
-    // Her şeyi temizle ve ana uygulamaya (tabs) dön
-    clearPhotos();
-    router.replace(`/completion?patientName=${answers.name || 'Misafir'}`); // veya bir "Tamamlandı" ekranına
+    router.replace('/(tabs)/progress');
   };
 
-  // Web kodunuzdaki 'handleRetake' (Tek bir fotoğrafı yeniden çek)
   const handleRetake = (index: number) => {
-    // Kullanıcıyı Manuel Kamera moduna, 'retakeIndex' parametresiyle gönder
     router.push(`/(photo-capture)/manual?retakeIndex=${index}`);
   };
 

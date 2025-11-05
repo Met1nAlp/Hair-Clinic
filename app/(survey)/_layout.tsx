@@ -59,35 +59,24 @@ export default function SurveyLayout() {
   
   return (
     <SafeAreaView style={styles.layoutSafeArea}>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          headerBackVisible: false, 
-          headerTitle: "", 
-          headerStyle: { backgroundColor: colorScheme === 'dark' ? Colors.cardBackground : '#F8F9FA' },
-          headerShadowVisible: false,
-         // headerElevation: 0, 
-          
-          header: () => (
-            <View style={[styles.headerContainer, { backgroundColor: colorScheme === 'dark' ? Colors.cardBackground : '#F8F9FA' }]}>
-              {currentIndex > 0 && !isInstructional ? (
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                  <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
-                </TouchableOpacity>
-              ) : ( <View style={styles.backButton} /> )}
-              
-              <View style={styles.progressWrapper}>
-                {!isInstructional && (
-                  <ProgressBar currentStep={effectiveCurrentStep} totalSteps={totalSteps} />
-                )}
-              </View>
-            </View>
-          ),
-        }}
-      />
+      <Stack.Screen options={{ headerShown: false }} />
       
       <View style={[styles.layoutSlotContainer, { backgroundColor: colorScheme === 'dark' ? Colors.cardBackground : '#F8F9FA' }]}>
         <View style={styles.layoutCard}>
+          {!isInstructional && (
+            <View style={styles.headerInCard}>
+              {currentIndex > 0 ? (
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                  <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
+                </TouchableOpacity>
+              ) : <View style={styles.backButton} />}
+              
+              <View style={styles.progressWrapper}>
+                <ProgressBar currentStep={effectiveCurrentStep} totalSteps={totalSteps} />
+              </View>
+            </View>
+          )}
+          
           <Slot />
         </View>
       </View>
@@ -97,23 +86,41 @@ export default function SurveyLayout() {
 
 const styles = StyleSheet.create({
   layoutSafeArea: { flex: 1 },
-  headerContainer: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: SIZES.padding / 2,
-    paddingTop: SIZES.padding,
-    paddingBottom: SIZES.base,
-  },
-  backButton: { padding: SIZES.base, width: 40 },
-  progressWrapper: { flex: 1, paddingHorizontal: SIZES.base },
-  layoutSlotContainer: { flex: 1, padding: SIZES.padding / 2 },
-  layoutCard: {
-    flex: 1, backgroundColor: Colors.cardBackground,
-    borderRadius: SIZES.radius * 2, // Tasarımınıza uygun
+  layoutSlotContainer: { 
+    flex: 1, 
     padding: SIZES.padding,
+    paddingTop: SIZES.padding * 2,
   },
+  layoutCard: {
+    flex: 1, 
+    backgroundColor: Colors.cardBackground,
+    borderRadius: SIZES.radius * 2,
+    padding: SIZES.padding * 1.5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  headerInCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SIZES.padding,
+  },
+  backButton: { padding: SIZES.base, width: 40, marginRight: SIZES.base },
+  progressWrapper: { flex: 1 },
   progressContainer: { width: '100%' },
   progressHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: SIZES.base },
   progressText: { ...FONTS.body3, color: Colors.textSecondary, fontSize: 12 },
-  progressBarBackground: { height: 8, backgroundColor: '#E9ECEF', borderRadius: 4 },
-  progressBarFill: { height: 8, backgroundColor: Colors.textPrimary, borderRadius: 4 },
+  progressBarBackground: { 
+    height: 6, 
+    backgroundColor: '#E9ECEF', 
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: { 
+    height: 6, 
+    backgroundColor: Colors.primary, 
+    borderRadius: 3,
+  },
 });

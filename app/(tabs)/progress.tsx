@@ -4,15 +4,14 @@ import { useRouter } from 'expo-router';
 import { Calendar, Camera, TrendingUp } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { ANGLES, PROGRESS_DATA } from '../../constants/progressData';
+import { ANGLES } from '../../constants/progressData';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
+import { usePhotoStore } from '../../store/photoStore';
 import { useSurveyStore } from '../../store/surveyStore';
 
-// Tip Tanımlamaları
 type ViewMode = 'gallery' | 'comparison';
 type AngleKey = typeof ANGLES[number]['key'];
 
-// Açı Seçici (Web'deki Tabs'in Native karşılığı)
 const AngleSelector: React.FC<{
   selectedAngle: AngleKey;
   onSelect: (angle: AngleKey) => void;
@@ -45,15 +44,15 @@ const AngleSelector: React.FC<{
 export default function MyProgressScreen() {
   const router = useRouter();
   const patientName = useSurveyStore((state) => state.answers.name) || 'Misafir';
+  const progressRecords = usePhotoStore((state) => state.progressRecords);
   const [viewMode, setViewMode] = useState<ViewMode>('gallery');
   const [selectedAngle, setSelectedAngle] = useState<AngleKey>('front');
 
-  // Karşılaştırma için ilk ve son fotoğraflar
-  const initialPhotos = PROGRESS_DATA[0];
-  const latestPhotos = PROGRESS_DATA[PROGRESS_DATA.length - 1];
-  const canCompare = PROGRESS_DATA.length >= 2;
+  const initialPhotos = progressRecords[0];
+  const latestPhotos = progressRecords[progressRecords.length - 1];
+  const canCompare = progressRecords.length >= 2;
+  const hasRecords = progressRecords.length > 0;
 
-  // Görünüm Değiştirme Butonları
   const renderViewToggle = () => (
     <View style={styles.toggleContainer}>
       <TouchableOpacity
@@ -76,10 +75,16 @@ export default function MyProgressScreen() {
     </View>
   );
 
-  // Galeri Görünümü
   const renderGalleryView = () => (
     <View>
-      {PROGRESS_DATA.map((record) => (
+      {!hasRecords && (
+        <View style={styles.emptyState}>
+          <Camera size={48} color={COLORS.iconInactive} />
+          <Text style={styles.emptyTitle}>Henüz fotoğraf yok</Text>
+          <Text style={styles.emptyText}>"Yeni Fotoğraf Ekle" butonuna tıklayarak ilk fotoğraflarınızı ekleyin</Text>
+        </View>
+      )}
+      {progressRecords.map((record) => (
         <View key={record.id} style={styles.card}>
           <View style={styles.cardHeader}>
             <View>
@@ -89,7 +94,6 @@ export default function MyProgressScreen() {
             <View style={styles.photoBadge}><Text style={styles.photoBadgeText}>5 Fotoğraf</Text></View>
           </View>
           
-          {/* Fotoğraf Galerisi (Yatay Kaydırılabilir) */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -SIZES.padding }}>
             <View style={{ width: SIZES.padding / 2 }} />
             {ANGLES.map((angle) => (
@@ -108,36 +112,44 @@ export default function MyProgressScreen() {
           )}
         </View>
       ))}
-      {/* Planlanan Kontroller (Web kodunuzdaki) */}
     </View>
   );
 
-  // Karşılaştırma Görünümü
-  const renderComparisonView = () => (
-    <View style={styles.card}>
-      <AngleSelector selectedAngle={selectedAngle} onSelect={setSelectedAngle} />
+  const renderComparisonView = () => {
+    if (!canCompare) {
+      return (
+        <View style={styles.emptyState}>
+          <TrendingUp size={48} color={COLORS.iconInactive} />
+          <Text style={styles.emptyTitle}>Karşılaştırma için yeterli fotoğraf yok</Text>
+          <Text style={styles.emptyText}>En az 2 farklı tarihte fotoğraf eklemeniz gerekiyor</Text>
+        </View>
+      );
+    }
+    return (
+    <View>
+      {ANGLES.map((angle) => (
+        <View key={angle.key} style={styles.card}>
+          <Text style={styles.angleTitle}>{angle.label}</Text>
+          
+          <View style={styles.comparisonRow}>
+            <View style={styles.comparisonColumn}>
+              <Text style={styles.comparisonLabel}>Başlangıç</Text>
+              <Text style={styles.comparisonDate}>{initialPhotos.date}</Text>
+              <Image source={{ uri: initialPhotos.photos[angle.key] }} style={styles.comparisonImage} />
+            </View>
+            
+            <View style={styles.comparisonColumn}>
+              <View style={styles.comparisonLabelRow}>
+                <Text style={styles.comparisonLabel}>Güncel</Text>
+                <View style={styles.latestBadge}><Text style={styles.latestBadgeText}>Güncel</Text></View>
+              </View>
+              <Text style={styles.comparisonDate}>{latestPhotos.date}</Text>
+              <Image source={{ uri: latestPhotos.photos[angle.key] }} style={styles.comparisonImage} />
+            </View>
+          </View>
+        </View>
+      ))}
       
-      <View style={styles.comparisonGrid}>
-        {/* Başlangıç */}
-        <View style={styles.comparisonItem}>
-          <View style={styles.comparisonHeader}>
-            <Text style={styles.cardTitle}>Başlangıç</Text>
-            <Text style={styles.cardSubtitle}>{initialPhotos.date}</Text>
-          </View>
-          <Image source={{ uri: initialPhotos.photos[selectedAngle] }} style={styles.image} />
-        </View>
-        
-        {/* Güncel */}
-        <View style={styles.comparisonItem}>
-          <View style={styles.comparisonHeader}>
-            <Text style={styles.cardTitle}>Güncel</Text>
-            <View style={styles.latestBadge}><Text style={styles.latestBadgeText}>Güncel</Text></View>
-          </View>
-          <Image source={{ uri: latestPhotos.photos[selectedAngle] }} style={styles.image} />
-        </View>
-      </View>
-
-      {/* İlerleme Notu */}
       <View style={styles.progressNote}>
         <View style={styles.progressIcon}>
           <TrendingUp size={24} color={COLORS.white} />
@@ -148,12 +160,12 @@ export default function MyProgressScreen() {
         </View>
       </View>
     </View>
-  );
+    );
+  };
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
-        {/* Başlık ve Buton */}
         <View style={styles.header}>
           <View>
             <Text style={styles.title}>Gelişimim</Text>
@@ -161,39 +173,36 @@ export default function MyProgressScreen() {
           </View>
           <TouchableOpacity 
             style={styles.addButton} 
-            onPress={() => router.push('/(photo-capture)/')} // Fotoğraf ekleme modülünü aç
+            onPress={() => router.push('/(photo-capture)/')}
           >
             <Camera size={16} color={COLORS.white} />
             <Text style={styles.addButtonText}>Yeni Fotoğraf Ekle</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Sonraki Fotoğraf Hatırlatması */}
-        <LinearGradient
-          colors={['#0D69FF', '#0052CC']}
-          style={styles.primaryCard}
-        >
-          <View style={styles.primaryCardHeader}>
-            <View style={styles.primaryIconContainer}>
-              <Calendar size={24} color={COLORS.white} />
+        {hasRecords && (
+          <LinearGradient
+            colors={['#0D69FF', '#0052CC']}
+            style={styles.primaryCard}
+          >
+            <View style={styles.primaryCardHeader}>
+              <View style={styles.primaryIconContainer}>
+                <Calendar size={24} color={COLORS.white} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.primaryTitle}>Sonraki Kontrol</Text>
+                <Text style={styles.primarySubtitle}>
+                  Düzenli fotoğraf çekerek ilerlemenizi takip edin
+                </Text>
+              </View>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.primaryTitle}>1. Ay Fotoğrafları</Text>
-              <Text style={styles.primarySubtitle}>
-                30 Kasım 2025 Pazar tarihinde 1. ay kontrolü fotoğraflarınızı çekme zamanı!
-              </Text>
-              <View style={styles.badge}><Text style={styles.badgeText}>25 gün sonra</Text></View>
-            </View>
-          </View>
-        </LinearGradient>
+          </LinearGradient>
+        )}
 
-        {/* Görünüm Değiştirici */}
         {renderViewToggle()}
 
-        {/* İçerik (Galeri veya Karşılaştırma) */}
         {viewMode === 'gallery' ? renderGalleryView() : renderComparisonView()}
         
-        {/* İpuçları Kartı */}
         <View style={styles.tipBox}>
           <Text style={styles.cardTitle}>Fotoğraf Çekim İpuçları</Text>
           <Text style={styles.tipText}>• Her kontrolde aynı ışık koşullarında çekim yapın (gündüz, doğal ışık)</Text>
@@ -205,7 +214,6 @@ export default function MyProgressScreen() {
   );
 }
 
-// Stiller
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F9FA' },
   content: { padding: SIZES.padding },
@@ -236,15 +244,7 @@ const styles = StyleSheet.create({
     marginRight: SIZES.base * 2,
   },
   primaryTitle: { ...FONTS.h2, color: COLORS.white, marginBottom: SIZES.base / 2 },
-  primarySubtitle: { ...FONTS.body2, color: 'rgba(255,255,255,0.8)', marginBottom: SIZES.base * 1.5 },
-  badge: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: SIZES.base,
-    paddingVertical: SIZES.base / 2,
-    borderRadius: SIZES.radius,
-    alignSelf: 'flex-start',
-  },
-  badgeText: { ...FONTS.body3, fontSize: 12, color: COLORS.white, fontWeight: '600' },
+  primarySubtitle: { ...FONTS.body2, color: 'rgba(255,255,255,0.8)' },
   
   toggleContainer: {
     flexDirection: 'row',
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
   photoBadgeText: { ...FONTS.body3, fontSize: 12, color: COLORS.primary, fontWeight: '600' },
 
   photoItem: {
-    width: 140, // 5'li grid için sabit genişlik
+    width: 140,
     marginHorizontal: SIZES.base / 2,
   },
   image: {
@@ -333,19 +333,43 @@ const styles = StyleSheet.create({
   angleTabText: { ...FONTS.h2, fontSize: 16, color: COLORS.textSecondary },
   angleTabTextActive: { color: COLORS.primary },
 
-  comparisonGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  angleTitle: {
+    ...FONTS.h2,
+    fontSize: 18,
+    color: COLORS.textPrimary,
     marginBottom: SIZES.padding,
+    textAlign: 'center',
   },
-  comparisonItem: {
-    width: '48%',
-  },
-  comparisonHeader: {
+  comparisonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: SIZES.base,
+  },
+  comparisonColumn: {
+    flex: 1,
+  },
+  comparisonLabel: {
+    ...FONTS.h2,
+    fontSize: 16,
+    color: COLORS.textPrimary,
+    marginBottom: SIZES.base / 2,
+  },
+  comparisonLabelRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SIZES.base / 2,
+  },
+  comparisonDate: {
+    ...FONTS.body3,
+    color: COLORS.textSecondary,
     marginBottom: SIZES.base,
+  },
+  comparisonImage: {
+    width: '100%',
+    aspectRatio: 3/4,
+    borderRadius: SIZES.radius,
+    backgroundColor: COLORS.stepCardBackground,
   },
   latestBadge: {
     backgroundColor: '#D5F5E3',
@@ -357,9 +381,10 @@ const styles = StyleSheet.create({
   progressNote: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: 'rgba(40, 167, 69, 0.1)', // Yeşil/Mavi gradient zor, o yüzden tek renk
-    borderRadius: SIZES.radius,
-    padding: SIZES.base * 1.5,
+    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+    borderRadius: SIZES.radius * 2,
+    padding: SIZES.padding,
+    marginTop: SIZES.base,
   },
   progressIcon: {
     width: 48,
@@ -380,5 +405,24 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     lineHeight: 18,
     marginBottom: SIZES.base / 2,
+  },
+  emptyState: {
+    backgroundColor: COLORS.white,
+    borderRadius: SIZES.radius * 2,
+    padding: SIZES.padding * 3,
+    alignItems: 'center',
+    marginBottom: SIZES.padding,
+  },
+  emptyTitle: {
+    ...FONTS.h2,
+    fontSize: 18,
+    color: COLORS.textPrimary,
+    marginTop: SIZES.padding,
+    marginBottom: SIZES.base,
+  },
+  emptyText: {
+    ...FONTS.body2,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
   },
 });

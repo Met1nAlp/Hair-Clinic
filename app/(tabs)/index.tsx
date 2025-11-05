@@ -105,7 +105,10 @@ export default function DashboardScreen() {
               <Text style={styles.primarySubtitle}>{operationDateStr}</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.primaryButton}>
+          <TouchableOpacity 
+            style={styles.primaryButton}
+            onPress={() => router.push('/(tabs)/explore')}
+          >
             <FileText size={16} color={COLORS.primary} />
             <Text style={styles.primaryButtonText}>Operasyon Öncesi Kontrol Listesini Gözden Geçirin</Text>
           </TouchableOpacity>
@@ -117,19 +120,19 @@ export default function DashboardScreen() {
             icon={<CheckCircle2 size={20} color="#28A745" />}
             title="Analiz Tamamlandı"
             subtitle="Raporunuzu görüntüleyin"
-            onPress={() => {}}
+            onPress={() => router.push('/modal')}
           />
           <QuickActionCard
             icon={<Video size={20} color={COLORS.primary} />}
             title="Hazırlık Videoları"
             subtitle="Bilgilendirme"
-            onPress={() => {}}
+            onPress={() => alert('Videolar yakında eklenecek')}
           />
           <QuickActionCard
             icon={<Phone size={20} color="#6F42C1" />}
             title="Koordinatör İletişim"
             subtitle="Bize ulaşın"
-            onPress={() => {}}
+            onPress={() => router.push('/(tabs)/support')}
           />
         </View>
 
@@ -212,8 +215,13 @@ const styles = StyleSheet.create({
   },
   primaryCard: {
     borderRadius: SIZES.radius * 2,
-    padding: SIZES.padding,
+    padding: SIZES.padding * 1.5,
     marginBottom: SIZES.padding,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
   primaryCardHeader: {
     flexDirection: 'row',
@@ -256,9 +264,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: COLORS.white,
     borderRadius: SIZES.radius,
-    padding: SIZES.base * 1.5,
+    padding: SIZES.padding,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   primaryButtonText: {
     ...FONTS.h2,
@@ -273,23 +286,23 @@ const styles = StyleSheet.create({
   },
   quickCard: {
     backgroundColor: COLORS.white,
-    borderRadius: SIZES.radius,
-    padding: SIZES.base * 1.5,
-    width: '32%', // 3'lü grid
+    borderRadius: SIZES.radius * 1.5,
+    padding: SIZES.padding,
+    width: '32%',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   quickIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: SIZES.radius,
+    width: 48,
+    height: 48,
+    borderRadius: SIZES.radius * 1.5,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.infoBackground, // Varsayılan (diğerlerini ekleyebiliriz)
-    marginBottom: SIZES.base * 1.5,
+    backgroundColor: COLORS.infoBackground,
+    marginBottom: SIZES.padding,
   },
   quickTitle: {
     ...FONTS.h2,
@@ -307,8 +320,13 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.white,
     borderRadius: SIZES.radius * 2,
-    padding: SIZES.padding,
+    padding: SIZES.padding * 1.5,
     marginBottom: SIZES.padding,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -337,9 +355,9 @@ const styles = StyleSheet.create({
   checklistItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    padding: SIZES.base * 1.5,
-    borderRadius: SIZES.radius,
-    marginBottom: SIZES.base,
+    padding: SIZES.padding,
+    borderRadius: SIZES.radius * 1.2,
+    marginBottom: SIZES.base * 1.5,
   },
   checklistTitle: {
     ...FONTS.body2,
@@ -362,9 +380,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#FFFBEA',
     borderRadius: SIZES.radius * 2,
-    padding: SIZES.padding,
+    padding: SIZES.padding * 1.5,
     borderWidth: 1,
     borderColor: '#FFEEBA',
+    shadowColor: '#FFA000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
   },
   reminderTitle: {
     ...FONTS.h2,

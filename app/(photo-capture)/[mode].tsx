@@ -29,28 +29,23 @@ export default function CaptureScreen() {
   const [isCapturing, setIsCapturing] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [facing, setFacing] = useState<'front' | 'back'>('front');
   
   const cameraRef = useRef<CameraView>(null);
   const currentStepData = CAPTURE_STEPS[currentStep];
   
   // --- YÖNETİM & İZİNLER ---
 
-  // Ekran yüklendiğinde
   useEffect(() => {
-    // İnceleme ekranından "Yeniden Çek" ile gelindiyse
     if (retakeIndex) {
       setCurrentStep(Number(retakeIndex));
     }
     
-    // Mod'a göre izinleri iste veya işlemi başlat
-    if (mode === 'gallery') {
-      handleGalleryCapture(); // Galeriyi hemen başlat
-    } else {
-      requestCamPermission(); // Kamera modları için izin iste
+    if (mode === 'studio' || mode === 'manual') {
+      requestCamPermission();
     }
   }, []);
 
-  // Adım değiştiğinde, Stüdyo Moduysa otomatik başlat
   useEffect(() => {
     if (mode === 'studio' && !isCapturing && currentStep < CAPTURE_STEPS.length) {
       handleStudioCapture();
@@ -75,14 +70,19 @@ export default function CaptureScreen() {
 
   // Web kodunuzdaki 'capturePhoto' fonksiyonu
   const onPhotoCaptured = (photoUri: string) => {
-    setPhoto(currentStep, photoUri); // Fotoğrafı hafızaya kaydet
+    setPhoto(currentStep, photoUri);
     setIsCapturing(false);
 
-    // Son adım mı kontrol et
+    // Eğer retake modundaysak direkt review'e dön
+    if (retakeIndex !== undefined) {
+      router.replace('/(photo-capture)/review');
+      return;
+    }
+
+    // Normal akış: sonraki adıma geç veya bitir
     if (currentStep < CAPTURE_STEPS.length - 1) {
-      setCurrentStep(currentStep + 1); // Sonraki adıma geç
+      setCurrentStep(currentStep + 1);
     } else {
-      // Bitti! İnceleme ekranına git
       router.replace('/(photo-capture)/review');
     }
   };
@@ -115,48 +115,59 @@ export default function CaptureScreen() {
     onPhotoCaptured(`data:image/jpeg;base64,${photo.base64}`);
   };
 
-  // Web kodunuzdaki 'handleGalleryUpload'
   const handleGalleryCapture = async () => {
-    if (!galleryPermission) {
+    if (!galleryPermission?.granted) {
       const result = await requestGalleryPermission();
       if (!result.granted) {
         alert("Galeri izni vermeniz gerekiyor.");
-        router.back(); // İzin yoksa Mod Seçimine geri dön
+        router.back();
         return;
       }
     }
     
-    // Galeriyi aç
-    let result = await ImagePicker.launchImageLibraryAsync({
+    setIsCapturing(true);
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 0.9,
-      base64: true, // Web kodunuz gibi Base64 kullanıyoruz
+      base64: true,
     });
 
     if (!result.canceled && result.assets[0].base64) {
       onPhotoCaptured(`data:image/jpeg;base64,${result.assets[0].base64}`);
-      
-      // Eğer galeri modundaysak ve son fotoğraf değilse, bir sonrakini seçmek için tekrar aç
-      if (mode === 'gallery' && currentStep < CAPTURE_STEPS.length - 1) {
-        setTimeout(handleGalleryCapture, 500); // Kullanıcıya nefes aldır
+    } else {
+      setIsCapturing(false);
+      if (currentStep === 0) {
+        router.back();
       }
-    } else if (result.canceled) {
-      // Kullanıcı galeriyi kapattı, mod seçimine geri dön
-      router.back();
     }
   };
 
   // --- RENDER (GÖRÜNÜM) ---
 
-  // 1. Galeri Modu (Yükleme ekranı)
+  // 1. Galeri Modu
   if (mode === 'gallery') {
     return (
       <View style={[styles.container, styles.galleryContainer]}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.headerTitle}>{currentStepData.title}</Text>
-        <Text style={styles.headerSubtitle}>Lütfen galeriden seçin...</Text>
-        <Text style={styles.headerSubtitle}>Adım {currentStep + 1} / {CAPTURE_STEPS.length}</Text>
+        <View style={styles.galleryCard}>
+          <Text style={styles.galleryTitle}>{currentStepData.title}</Text>
+          <Text style={styles.galleryDescription}>{currentStepData.description}</Text>
+          <Text style={styles.galleryStep}>Adım {currentStep + 1} / {CAPTURE_STEPS.length}</Text>
+          
+          {isCapturing ? (
+            <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: SIZES.padding }} />
+          ) : (
+            <TouchableOpacity style={styles.galleryButton} onPress={handleGalleryCapture}>
+              <Text style={styles.buttonText}>Galeriden Seç</Text>
+            </TouchableOpacity>
+          )}
+          
+          {currentStep > 0 && (
+            <TouchableOpacity style={styles.backToReviewButton} onPress={() => router.replace('/(photo-capture)/review')}>
+              <Text style={styles.backToReviewText}>İncelemeye Dön</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
     );
   }
@@ -182,7 +193,7 @@ export default function CaptureScreen() {
       <CameraView
         ref={cameraRef}
         style={StyleSheet.absoluteFill}
-        facing={'front'} // 'user' = ön kamera
+        facing={facing}
       >
         {/* Başlık (Header) */}
         <View style={styles.header}>
@@ -190,8 +201,11 @@ export default function CaptureScreen() {
             <Text style={styles.headerSubtitle}>Adım {currentStep + 1} / {CAPTURE_STEPS.length}</Text>
             <Text style={styles.headerTitle}>{currentStepData.title}</Text>
           </View>
-          <TouchableOpacity onPress={() => router.back()} style={styles.changeButton}>
-            <Text style={styles.changeButtonText}>Değiştir</Text>
+          <TouchableOpacity 
+            onPress={() => setFacing(facing === 'front' ? 'back' : 'front')} 
+            style={styles.changeButton}
+          >
+            <Text style={styles.changeButtonText}>{facing === 'front' ? 'Ön' : 'Arka'}</Text>
           </TouchableOpacity>
         </View>
 
@@ -331,4 +345,57 @@ const styles = StyleSheet.create({
     borderRadius: SIZES.radius,
   },
   buttonText: { ...FONTS.h2, fontSize: 16, color: COLORS.white },
+  
+  galleryCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: SIZES.radius * 2,
+    padding: SIZES.padding * 2,
+    margin: SIZES.padding,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  galleryTitle: {
+    ...FONTS.h1,
+    fontSize: 24,
+    color: COLORS.textPrimary,
+    marginBottom: SIZES.base,
+    textAlign: 'center',
+  },
+  galleryDescription: {
+    ...FONTS.body2,
+    color: COLORS.textSecondary,
+    marginBottom: SIZES.base,
+    textAlign: 'center',
+  },
+  galleryStep: {
+    ...FONTS.body3,
+    color: COLORS.primary,
+    marginBottom: SIZES.padding * 1.5,
+    fontWeight: '600',
+  },
+  galleryButton: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: SIZES.padding,
+    paddingHorizontal: SIZES.padding * 2,
+    borderRadius: SIZES.radius,
+    marginTop: SIZES.base,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  backToReviewButton: {
+    marginTop: SIZES.padding,
+    padding: SIZES.base * 1.5,
+  },
+  backToReviewText: {
+    ...FONTS.body2,
+    color: COLORS.textSecondary,
+    textDecorationLine: 'underline',
+  },
 });

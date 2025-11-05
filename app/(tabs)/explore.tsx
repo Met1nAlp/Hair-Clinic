@@ -10,6 +10,7 @@ import {
   Video,
 } from 'lucide-react-native';
 import React from 'react';
+import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { JOURNEY_STEPS, JourneyIconName, JourneyStep } from '../../constants/journeyData';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
@@ -74,15 +75,20 @@ const JourneyStepCard: React.FC<{ step: JourneyStep }> = ({ step }) => {
           ))}
         </View>
 
-        {/* Web kodunuzdaki koşullu butonlar */}
         {isCurrent && (
-          <TouchableOpacity style={[styles.button, styles.buttonCurrent]}>
+          <TouchableOpacity 
+            style={[styles.button, styles.buttonCurrent]}
+            onPress={() => alert('Detaylı talimatlar yakında eklenecek')}
+          >
             <FileText size={16} color={COLORS.white} />
             <Text style={styles.buttonText}>Detaylı Talimatları Görüntüle</Text>
           </TouchableOpacity>
         )}
         {step.id === 'first-wash' && step.status !== 'completed' && (
-          <TouchableOpacity style={[styles.button, styles.buttonOutline]}>
+          <TouchableOpacity 
+            style={[styles.button, styles.buttonOutline]}
+            onPress={() => alert('Yıkama videosu yakında eklenecek')}
+          >
             <Video size={16} color={COLORS.primary} />
             <Text style={[styles.buttonText, { color: COLORS.primary }]}>Yıkama Videosunu İzle</Text>
           </TouchableOpacity>
@@ -93,6 +99,7 @@ const JourneyStepCard: React.FC<{ step: JourneyStep }> = ({ step }) => {
 };
 
 export default function JourneyScreen() {
+  const router = useRouter();
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
@@ -112,11 +119,13 @@ export default function JourneyScreen() {
           ))}
         </View>
 
-        {/* Destek Kartı */}
         <View style={styles.supportCard}>
           <Text style={styles.supportTitle}>Sorularınız mı var?</Text>
           <Text style={styles.supportText}>Süreç boyunca hasta koordinatörünüz size rehberlik edecektir</Text>
-          <TouchableOpacity style={[styles.button, styles.buttonCurrent, { width: '100%' }]}>
+          <TouchableOpacity 
+            style={[styles.button, styles.buttonCurrent, { width: '100%' }]}
+            onPress={() => router.push('/(tabs)/support')}
+          >
             <Text style={styles.buttonText}>Koordinatörle İletişime Geç</Text>
           </TouchableOpacity>
         </View>
@@ -176,11 +185,16 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     backgroundColor: COLORS.white,
-    borderRadius: SIZES.radius,
-    padding: SIZES.padding,
+    borderRadius: SIZES.radius * 1.5,
+    padding: SIZES.padding * 1.5,
     borderWidth: 1,
     borderColor: COLORS.iconInactive,
-    marginTop: SIZES.padding / 2, // İkonun ortalanması için
+    marginTop: SIZES.padding / 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   cardCompleted: {
     backgroundColor: '#E7F7E9', // Açık yeşil
@@ -256,12 +270,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: SIZES.base * 1.5,
+    padding: SIZES.padding,
     borderRadius: SIZES.radius,
-    marginTop: SIZES.base * 2,
+    marginTop: SIZES.padding,
   },
   buttonCurrent: {
     backgroundColor: COLORS.primary,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonOutline: {
     backgroundColor: COLORS.white,
@@ -276,10 +295,17 @@ const styles = StyleSheet.create({
   },
   supportCard: {
     backgroundColor: COLORS.infoBackground,
-    borderRadius: SIZES.radius,
-    padding: SIZES.padding,
+    borderRadius: SIZES.radius * 2,
+    padding: SIZES.padding * 1.5,
     alignItems: 'center',
     marginTop: SIZES.padding,
+    borderWidth: 1,
+    borderColor: '#BEDAFF',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
   },
   supportTitle: {
     ...FONTS.h2,
