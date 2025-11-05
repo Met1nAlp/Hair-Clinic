@@ -31,6 +31,11 @@ export default function RootLayout() {
         name="(survey)" 
         options={{ headerShown: false }} 
       />
+
+      <Stack.Screen 
+        name="(photo-capture)" 
+        options={{ headerShown: false }} 
+      />
       
       <Stack.Screen 
         name="(tabs)" 

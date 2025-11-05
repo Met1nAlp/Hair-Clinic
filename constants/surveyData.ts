@@ -164,6 +164,6 @@ export const SURVEY_DATA: SurveyQuestion[] = [
     type: 'instructional',
     title: 'Teşekkürler, {name}!', // {name} dinamik olarak eklenecek
     subtitle: 'Şimdi durumunuzu net görebilmemiz için fotoğraflara ihtiyacımız var.',
-    nextStepId: '/(photo-capture)/start', // UYGULAMANIN FARKLI BİR BÖLÜMÜ
+    nextStepId: '/(photo-capture)/', // UYGULAMANIN FARKLI BİR BÖLÜMÜ
   }
 ];
