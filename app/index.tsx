@@ -25,10 +25,14 @@ export default function WelcomeScreen() {
   const resetSurvey = useSurveyStore((state) => state.resetSurvey);
 
   const handleStartPress = () => {
-    resetSurvey(); 
-    const firstQuestionId = SURVEY_DATA[0]?.id;
-    if (firstQuestionId) {
-      router.replace(`/(survey)/${firstQuestionId}`);
+    try {
+      resetSurvey(); 
+      const firstQuestionId = SURVEY_DATA[0]?.id;
+      if (firstQuestionId) {
+        router.replace(`/(survey)/${firstQuestionId}`);
+      }
+    } catch (error) {
+      console.error('Start survey error:', error);
     }
   };
 

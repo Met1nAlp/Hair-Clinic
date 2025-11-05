@@ -60,6 +60,21 @@ export const FONTS: FontStyles = {
 };
 
 
+// Backward compatibility
+export const Colors = {
+  light: {
+    tint: COLORS.primary,
+    text: COLORS.textPrimary,
+    background: COLORS.cardBackground,
+  },
+  dark: {
+    tint: COLORS.primary,
+    text: COLORS.textPrimary,
+    background: COLORS.cardBackground,
+  },
+  ...COLORS,
+};
+
 const appTheme = { COLORS, SIZES, FONTS };
 
 export default appTheme;

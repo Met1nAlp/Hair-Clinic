@@ -12,7 +12,8 @@ const QuestionInput: React.FC<{
   onNext: (nextStepId: string, answer: any) => void;
   isNumber?: boolean;
 }> = ({ question, onNext, isNumber = false }) => {
-  const initialValue = useSurveyStore.getState().answers[question.id as keyof MedicalAnswers];
+  const answers = useSurveyStore((state) => state.answers);
+  const initialValue = answers[question.id as keyof MedicalAnswers];
   const [value, setValue] = useState(initialValue === undefined ? '' : String(initialValue));
   const disabled = !value || (isNumber && (parseInt(value) < 18 || parseInt(value) > 80));
 
@@ -45,7 +46,8 @@ const QuestionTextArea: React.FC<{
   question: SurveyQuestion; 
   onNext: (nextStepId: string, answer: string) => void;
 }> = ({ question, onNext }) => {
-  const initialValue = useSurveyStore.getState().answers[question.id as keyof MedicalAnswers];
+  const answers = useSurveyStore((state) => state.answers);
+  const initialValue = answers[question.id as keyof MedicalAnswers];
   const [value, setValue] = useState(initialValue === undefined ? '' : String(initialValue));
   const disabled = !value || value.length < 5;
 
@@ -177,13 +179,17 @@ export default function SurveyStepScreen() {
   const currentQuestion = SURVEY_DATA.find(q => q.id === stepId);
 
   const handleNext = (nextStepId: string, answer: any) => {
-    if (stepId && currentQuestion && currentQuestion.type !== 'instructional') {
-      updateAnswer(stepId as keyof MedicalAnswers, answer);
-    }
-    if (nextStepId.startsWith('/')) {
-      router.replace(nextStepId);
-    } else {
-      router.push(`/(survey)/${nextStepId}`);
+    try {
+      if (stepId && currentQuestion && currentQuestion.type !== 'instructional') {
+        updateAnswer(stepId as keyof MedicalAnswers, answer);
+      }
+      if (nextStepId.startsWith('/')) {
+        router.replace(nextStepId);
+      } else {
+        router.push(`/(survey)/${nextStepId}`);
+      }
+    } catch (error) {
+      console.error('Navigation error:', error);
     }
   };
 
